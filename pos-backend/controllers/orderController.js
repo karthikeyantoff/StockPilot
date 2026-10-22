@@ -14,7 +14,8 @@ const generateOrderNumber = () => {
 const reserveOrder = async (req, res) => {
   const rollbackList = []; // Track reservations to rollback on failure
   try {
-    const idempotencyKey = req.headers['idempotency-key'] || req.body.idempotencyKey;
+    const body = req.body || {};
+    const idempotencyKey = req.headers['idempotency-key'] || body.idempotencyKey;
 
     // Check Idempotency Key to prevent duplicate checkouts
     if (idempotencyKey) {
@@ -30,10 +31,10 @@ const reserveOrder = async (req, res) => {
 
     // Normalize input: Support both multi-item cart (items: [...]) and legacy single-item ({ productId, quantity })
     let rawItems = [];
-    if (Array.isArray(req.body.items) && req.body.items.length > 0) {
-      rawItems = req.body.items;
-    } else if (req.body.productId) {
-      rawItems = [{ productId: req.body.productId, quantity: req.body.quantity || 1 }];
+    if (Array.isArray(body.items) && body.items.length > 0) {
+      rawItems = body.items;
+    } else if (body.productId) {
+      rawItems = [{ productId: body.productId, quantity: body.quantity || 1 }];
     } else {
       return res.status(400).json({ error: 'Please provide items with productId and quantity.' });
     }
