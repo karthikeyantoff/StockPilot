@@ -14,13 +14,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const app = express();
 
 // Global Middleware
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
-}));
-app.options('*', cors());
+app.use(cors());
 app.use(express.json());
 
 // Database Connection Middleware for Serverless & Long-running instances
@@ -73,8 +67,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Expiration Background Worker (Runs in regular Node processes)
-if (process.env.NODE_ENV !== 'test') {
+// Start Expiration Background Worker (Runs only in regular long-running Node processes, NOT on serverless)
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
   startExpirationWorker(30000); // Check every 30s
 }
 

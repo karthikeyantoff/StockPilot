@@ -1,10 +1,14 @@
 const mongoose = require('mongoose');
 
-let cachedConnection = null;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 const connectDB = async () => {
-  if (mongoose.connection.readyState === 1) {
-    return mongoose.connection;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
   }
 
   const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
@@ -12,22 +16,22 @@ const connectDB = async () => {
     throw new Error('MONGO_URI is missing in environment variables!');
   }
 
-  if (!cachedConnection) {
+  if (!cached.promise) {
     const opts = {
-      bufferCommands: true,
+      bufferCommands: false,
       serverSelectionTimeoutMS: 5000,
     };
-    cachedConnection = mongoose.connect(MONGO_URI, opts).then((m) => m);
+    cached.promise = mongoose.connect(MONGO_URI, opts).then((m) => m);
   }
 
   try {
-    await cachedConnection;
+    cached.conn = await cached.promise;
   } catch (err) {
-    cachedConnection = null;
+    cached.promise = null;
     throw err;
   }
 
-  return mongoose.connection;
+  return cached.conn;
 };
 
 module.exports = connectDB;
