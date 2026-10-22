@@ -14,7 +14,13 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const app = express();
 
 // Global Middleware
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+}));
+app.options('*', cors());
 app.use(express.json());
 
 // Database Connection Middleware for Serverless & Long-running instances
